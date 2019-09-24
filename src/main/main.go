@@ -48,30 +48,30 @@ func main() {
 		fmt.Println("suffled card : ", cardDealer.cardList)
 
 		// init player gamaResult.
-		for j := range cardDealer.player {
-			cardDealer.player[j].cardResult = -1
+		for i := range cardDealer.player {
+			cardDealer.player[i].cardResult = -1
 		}
 
 		// Player Count
-		for j := range cardDealer.player {
+		for i := range cardDealer.player {
 			// Divide And Get Result.
-			if cardDealer.player[j].coin > 0 {
-				cardDealer.player[j].cardResult = (cardDealer.cardList[j*2] + cardDealer.cardList[(j*2)+1]) % 10
+			if cardDealer.player[i].coin > 0 {
+				cardDealer.player[i].cardResult = (cardDealer.cardList[i*2] + cardDealer.cardList[(i*2)+1]) % 10
 			}
 		}
 
 		winValue := 0
 		winIndex := 0
-		for j := range cardDealer.player {
-			if cardDealer.player[j].cardResult > winValue {
-				winValue = cardDealer.player[j].cardResult
-				winIndex = j
+		for i := range cardDealer.player {
+			if cardDealer.player[i].cardResult > winValue {
+				winValue = cardDealer.player[i].cardResult
+				winIndex = i
 			}
 		}
 
 		checkDrawGame := 0
-		for j := range cardDealer.player {
-			if cardDealer.player[j].cardResult == winValue {
+		for i := range cardDealer.player {
+			if cardDealer.player[i].cardResult == winValue {
 				checkDrawGame++
 			}
 		}
@@ -81,14 +81,14 @@ func main() {
 			drawGameRoundList = append(drawGameRoundList, gameRound)
 			fmt.Println("Draw Game : ", gameRound)
 		} else {
-			for j := range cardDealer.player {
-				if cardDealer.player[j].coin > 0 {
-					if winIndex != j {
-						cardDealer.player[j].coin--
+			for i := range cardDealer.player {
+				if cardDealer.player[i].coin > 0 {
+					if winIndex != i {
+						cardDealer.player[i].coin--
 						cardDealer.player[winIndex].coin++
 
-						if cardDealer.player[j].coin <= 0 {
-							cardDealer.player[j].bankruptcyRound = gameRound
+						if cardDealer.player[i].coin <= 0 {
+							cardDealer.player[i].bankruptcyRound = gameRound
 						}
 					} else {
 						cardDealer.player[winIndex].winGameCount++
@@ -101,8 +101,8 @@ func main() {
 
 	fmt.Println("========================")
 	fmt.Println("Total Game : ", totalGameCount)
-	for j := range cardDealer.player {
-		fmt.Println("Player ", j, " : coin (", cardDealer.player[j].coin, "), win(", cardDealer.player[j].winGameCount, "), bankruptcyRound(", cardDealer.player[j].bankruptcyRound, ")")
+	for i := range cardDealer.player {
+		fmt.Println("Player ", i, " : coin (", cardDealer.player[i].coin, "), win(", cardDealer.player[i].winGameCount, "), bankruptcyRound(", cardDealer.player[i].bankruptcyRound, ")")
 	}
 	fmt.Println("Draw Game : ", drawGameCount, " : ", drawGameRoundList)
 }
