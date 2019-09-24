@@ -7,6 +7,123 @@ import (
 )
 
 func main() {
+	// startCardGame()
+
+	// card := makeCard()
+	// fmt.Println("origin card : ", card)
+	// result := shuffleCard(card)
+	// fmt.Println("suffled card : ", result)
+
+	// a := make(map[int]int)
+	// a[1] = 100
+	// val, flag := a[1]
+	// fmt.Println("val : ", val, ", flag : ", flag)
+	// fmt.Println("a : ", a[1])
+
+	// Create Dealer
+	cardDealer := new(CardDealer)
+
+	// Player Count.
+	playerCount := 5
+
+	// Assign player to dealer
+	cardDealer.player = make([]Player, playerCount)
+	for i := range cardDealer.player {
+		cardDealer.player[i].coin = 10
+	}
+
+	drawGameRoundList := make([]int, 0)
+
+	totalGameCount := 100
+	drawGameCount := 0
+
+	for gameRound := 0; gameRound < totalGameCount; gameRound++ {
+		fmt.Println("===== Start : ", gameRound+1)
+
+		// Ready Card
+		card := makeCard()
+		fmt.Println("origin card : ", card)
+
+		cardDealer.cardList = shuffleCard(card)
+		fmt.Println("suffled card : ", cardDealer.cardList)
+
+		// init player gamaResult.
+		for j := range cardDealer.player {
+			cardDealer.player[j].cardResult = -1
+		}
+
+		// Player Count
+		for j := range cardDealer.player {
+			// Divide And Get Result.
+			if cardDealer.player[j].coin > 0 {
+				cardDealer.player[j].cardResult = (cardDealer.cardList[j*2] + cardDealer.cardList[(j*2)+1]) % 10
+			}
+		}
+
+		winValue := 0
+		winIndex := 0
+		for j := range cardDealer.player {
+			if cardDealer.player[j].cardResult > winValue {
+				winValue = cardDealer.player[j].cardResult
+				winIndex = j
+			}
+		}
+
+		checkDrawGame := 0
+		for j := range cardDealer.player {
+			if cardDealer.player[j].cardResult == winValue {
+				checkDrawGame++
+			}
+		}
+
+		if checkDrawGame > 1 {
+			drawGameCount++
+			drawGameRoundList = append(drawGameRoundList, gameRound)
+			fmt.Println("Draw Game : ", gameRound)
+		} else {
+			for j := range cardDealer.player {
+				if cardDealer.player[j].coin > 0 {
+					if winIndex != j {
+						cardDealer.player[j].coin--
+						cardDealer.player[winIndex].coin++
+
+						if cardDealer.player[j].coin <= 0 {
+							cardDealer.player[j].bankruptcyRound = gameRound
+						}
+					} else {
+						cardDealer.player[winIndex].winGameCount++
+					}
+				}
+			}
+			fmt.Println("Result : ", cardDealer.player)
+		}
+	}
+
+	fmt.Println("========================")
+	fmt.Println("Total Game : ", totalGameCount)
+	for j := range cardDealer.player {
+		fmt.Println("Player ", j, " : coin (", cardDealer.player[j].coin, "), win(", cardDealer.player[j].winGameCount, "), bankruptcyRound(", cardDealer.player[j].bankruptcyRound, ")")
+	}
+	fmt.Println("Draw Game : ", drawGameCount, " : ", drawGameRoundList)
+}
+
+type CardDealer struct {
+	player   []Player
+	cardList []int
+}
+
+type Player struct {
+	coin            int
+	cardResult      int
+	winGameCount    int
+	bankruptcyRound int
+}
+
+func increase(number *int) {
+	*number++
+}
+
+func startCardGame() {
 
 	// 카드 값 초기화.
 	cardList := make([]int, 20)
@@ -36,7 +153,7 @@ func main() {
 		selectedCardList := make([]int, selectedCardSize)
 		for i := 0; i < selectedCardSize; i++ {
 			duplicated := 0
-			pickedCard := cardList[cardPick(20)]
+			pickedCard := cardList[pickCard(20)]
 			for _, value := range selectedCardList {
 				if value == pickedCard {
 					duplicated++
@@ -90,6 +207,38 @@ func main() {
 	fmt.Println("Draw Game Count : ", noWinner)
 }
 
-func cardPick(cardSize int) int {
+func pickCard(cardSize int) int {
 	return rand.Intn(cardSize)
+}
+
+func shuffleCard(card []int) []int {
+
+	myCard := make([]int, len(card))
+	for index := range myCard {
+		s1 := rand.NewSource(time.Now().UnixNano())
+		rand := rand.New(s1)
+		randomNumber := rand.Intn(len(card))
+		myCard[index] = card[randomNumber]
+		card = append(card[:randomNumber], card[randomNumber+1:]...)
+	}
+	return myCard
+}
+
+func makeCard() []int {
+	result := make([]int, 20)
+	for i := 0; i < 20; i++ {
+		result[i] = (i + 1) % 10
+		if result[i] == 0 {
+			result[i] = 10
+		}
+	}
+	return result
+}
+
+func checkCard(card []int) int {
+	flag := 0
+	for _, temp := range card {
+		flag = flag + temp
+	}
+	return flag
 }
