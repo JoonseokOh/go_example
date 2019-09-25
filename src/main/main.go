@@ -2,7 +2,10 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"math/rand"
+	"strings"
+	"sync"
 	"time"
 )
 
@@ -20,16 +23,123 @@ func main() {
 	// fmt.Println("val : ", val, ", flag : ", flag)
 	// fmt.Println("a : ", a[1])
 
+	// startGameWithDealer()
+
+	// 파일을 읽어옴.
+	dat, err := ioutil.ReadFile("C:\\workspace_go\\text\\test02.txt")
+	if err != nil {
+		fmt.Println("Error : ", err)
+		return
+	}
+
+	// 스레드가 처리해야 할 남은 길이.
+	remainWordLength := len(dat)
+
+	// 스레드 wait 그룹.
+	var wait sync.WaitGroup
+
+	// 결과 값을 저장할 맵.
+	storyMap := make(map[string]int)
+
+	// 하나의 스레드가 처리해야할 데이터 사이즈.
+	processSize := 1000
+
+	// 스레드 생성 및 실행.
+	i := 0
+	for {
+		wait.Add(1)
+		datPart := make([]byte, 0)
+		startIndex := i * processSize
+		endIndex := startIndex + processSize
+		if remainWordLength < processSize {
+			endIndex = startIndex + remainWordLength
+		}
+		datPart = append(datPart, dat[startIndex:endIndex]...)
+		remainWordLength -= processSize
+		i++
+		go getCountOfWord(datPart, storyMap, &wait)
+		if remainWordLength <= 0 {
+			break
+		}
+	}
+
+	wait.Wait()
+	fmt.Println("End of Program!!!")
+	for i, v := range storyMap {
+		fmt.Println(i, " : ", v)
+	}
+
+	fmt.Println("============================")
+	fmt.Println("total length : ", len(dat))
+	fmt.Println("Process Size : ", processSize)
+	fmt.Println("total thread count : ", i)
+
+}
+
+func getCountOfWord(dat []byte, storyMap map[string]int, wait *sync.WaitGroup) {
+	defer wait.Done()
+
+	fmt.Println("Start getCountOfWord : ", len(dat))
+
+	// 공백, A~Z, a~z
+	for i := 0; i < len(dat); i++ {
+		v := dat[i]
+		if (v == ' ' || ('A' <= v && v <= 'Z') || ('a' <= v && v <= 'z')) == false {
+			// fmt.Println("remove : ", v, " : ", string(v))
+			dat = append(dat[:i], dat[i+1:]...)
+			i--
+		}
+	}
+
+	// 파일 내용을 저장할 문자열 변수.
+	story := string(dat)
+	// fmt.Println(story)
+
+	var splitStory []string
+	splitStory = strings.Split(story, " ")
+
+	for _, v := range splitStory {
+		if v == " " || v == "" {
+			continue
+		}
+		count := storyMap[v]
+		if count == 0 {
+			storyMap[v] = 1
+		} else {
+			storyMap[v]++
+		}
+	}
+}
+
+func mergeCountOfWord(maps ...map[string]int) {
+
+}
+
+type CardDealer struct {
+	player   []Player
+	cardList []int
+}
+
+type Player struct {
+	coin            int
+	cardResult      int
+	winGameCount    int
+	bankruptcyRound int
+}
+
+func startGameWithDealer() {
 	// Create Dealer
 	cardDealer := new(CardDealer)
 
 	// Player Count.
 	playerCount := 5
 
+	defaultCoin := 10
+
 	// Assign player to dealer
 	cardDealer.player = make([]Player, playerCount)
 	for i := range cardDealer.player {
-		cardDealer.player[i].coin = 10
+		cardDealer.player[i].coin = defaultCoin
 	}
 
 	drawGameRoundList := make([]int, 0)
@@ -100,23 +210,11 @@ func main() {
 	}
 
 	fmt.Println("========================")
-	fmt.Println("Total Game : ", totalGameCount)
+	fmt.Println("Total Game : ", totalGameCount, ", defaultCoin : ", defaultCoin)
 	for i := range cardDealer.player {
 		fmt.Println("Player ", i, " : coin (", cardDealer.player[i].coin, "), win(", cardDealer.player[i].winGameCount, "), bankruptcyRound(", cardDealer.player[i].bankruptcyRound, ")")
 	}
 	fmt.Println("Draw Game : ", drawGameCount, " : ", drawGameRoundList)
-}
-
-type CardDealer struct {
-	player   []Player
-	cardList []int
-}
-
-type Player struct {
-	coin            int
-	cardResult      int
-	winGameCount    int
-	bankruptcyRound int
 }
 
 func increase(number *int) {
